@@ -21,7 +21,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Quiz />} />
+          <Route path="/" element={<Index />} />
           <Route path="/fragrances" element={<Index />} />
           <Route path="/compare-intro" element={<CompareIntro />} />
           <Route path="/compare" element={<Compare />} />
