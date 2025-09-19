@@ -1,0 +1,13 @@
+[build]
+  command = "cd mixer-final-100-main && pnpm build"
+  publish = "mixer-final-100-main/dist/spa"
+  functions = "mixer-final-100-main/dist/functions"
+
+[build.environment]
+  NODE_ENV = "production"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+  force = true
