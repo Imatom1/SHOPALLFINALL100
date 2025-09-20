@@ -19,6 +19,7 @@ import { CompactPerfumeCard } from "../components/CompactPerfumeCard";
 import { PerfumeDetail } from "../components/PerfumeDetail";
 import { ComparisonCards } from "../components/ComparisonCards";
 import { Header } from "../components/Header";
+import { MiniFragranceGrid } from "../components/MiniFragranceGrid";
 
 export default function Compare() {
   const [searchParams, setSearchParams] = useSearchParams();
