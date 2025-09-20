@@ -1022,6 +1022,16 @@ export default function Quiz() {
           </Card>
         </div>
 
+        {/* Miniature Fragrance Grid */}
+        <MiniFragranceGrid
+          items={filteredAndSortedPerfumes}
+          title="Quick Browse"
+          max={8}
+          onItemClick={(perfume, e) => handlePerfumeClick(perfume, e)}
+          ctaHref="/"
+          ctaLabel="View All"
+        />
+
         {/* Full Width Fragrance Section */}
         <div className="w-full">
           <FragranceSection />
