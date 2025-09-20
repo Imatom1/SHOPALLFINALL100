@@ -19,7 +19,6 @@ import { CompactPerfumeCard } from "../components/CompactPerfumeCard";
 import { PerfumeDetail } from "../components/PerfumeDetail";
 import { ComparisonCards } from "../components/ComparisonCards";
 import { Header } from "../components/Header";
-import { MiniFragranceGrid } from "../components/MiniFragranceGrid";
 
 export default function Compare() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -352,7 +351,7 @@ export default function Compare() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="max-h-[500px] lg:max-h-[1000px] overflow-y-auto space-y-1">
+                  <div className="space-y-1">
                     {availablePerfumes.length === 0 ? (
                       <div className="text-center py-4">
                         <p className="text-xs text-gold-300">
@@ -360,7 +359,7 @@ export default function Compare() {
                         </p>
                       </div>
                     ) : (
-                      availablePerfumes.slice(0, 15).map((perfume) => (
+                      availablePerfumes.map((perfume) => (
                         <div key={perfume.id} className="relative">
                           <CompactPerfumeCard
                             perfume={perfume}
@@ -382,22 +381,6 @@ export default function Compare() {
           </div>
         </div>
       </div>
-
-      {/* Miniature Fragrance Grid */}
-      <MiniFragranceGrid
-        items={availablePerfumes}
-        title="Quick Picks"
-        max={8}
-        onItemClick={(perfume, e) => {
-          if (comparisonList.length < 3) {
-            addToComparison(perfume);
-          } else {
-            handlePerfumeClick(perfume, e);
-          }
-        }}
-        ctaHref="/"
-        ctaLabel="Browse All"
-      />
 
       {/* Perfume Detail Modal */}
       <PerfumeDetail
