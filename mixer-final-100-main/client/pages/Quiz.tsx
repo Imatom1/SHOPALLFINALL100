@@ -47,7 +47,6 @@ import { CompactPerfumeCard } from "../components/CompactPerfumeCard";
 import { SortSelect, SortOption } from "../components/SortSelect";
 import { CompactFilters, FilterState } from "../components/CompactFilters";
 import { perfumes, Perfume } from "../data/perfumes";
-import { MiniFragranceGrid } from "../components/MiniFragranceGrid";
 
 interface QuizQuestion {
   id: string;
@@ -973,7 +972,7 @@ export default function Quiz() {
         </div>
 
         {/* Perfume Grid */}
-        <div className="max-h-[600px] overflow-y-auto">
+        <div>
           {filteredAndSortedPerfumes.length === 0 ? (
             <div className="text-center py-12">
               <Sparkles className="w-12 h-12 text-gold-500 mx-auto mb-4" />
@@ -1021,16 +1020,6 @@ export default function Quiz() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Miniature Fragrance Grid */}
-        <MiniFragranceGrid
-          items={filteredAndSortedPerfumes}
-          title="Quick Browse"
-          max={8}
-          onItemClick={(perfume, e) => handlePerfumeClick(perfume, e)}
-          ctaHref="/"
-          ctaLabel="View All"
-        />
 
         {/* Full Width Fragrance Section */}
         <div className="w-full">
