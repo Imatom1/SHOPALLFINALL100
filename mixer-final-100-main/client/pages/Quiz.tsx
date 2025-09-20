@@ -47,6 +47,7 @@ import { CompactPerfumeCard } from "../components/CompactPerfumeCard";
 import { SortSelect, SortOption } from "../components/SortSelect";
 import { CompactFilters, FilterState } from "../components/CompactFilters";
 import { perfumes, Perfume } from "../data/perfumes";
+import { MiniFragranceGrid } from "../components/MiniFragranceGrid";
 
 interface QuizQuestion {
   id: string;
