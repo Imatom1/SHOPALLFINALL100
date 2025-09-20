@@ -171,13 +171,7 @@ export default function Index() {
   const endIndex = total;
   const pageItems = filteredAndSortedPerfumes;
 
-  useEffect(() => {
-    if (currentPage !== safePage) {
-      const next = new URLSearchParams(searchParams);
-      next.set("page", String(safePage));
-      setSearchParams(next, { replace: true });
-    }
-  }, [currentPage, safePage, searchParams, setSearchParams]);
+  // Pagination disabled: do not update URL params
 
   const handlePerfumeClick = (perfume: Perfume, e?: React.MouseEvent<HTMLElement>) => {
     console.log("Perfume clicked:", perfume.name);
