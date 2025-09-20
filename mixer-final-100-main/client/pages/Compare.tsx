@@ -383,6 +383,22 @@ export default function Compare() {
         </div>
       </div>
 
+      {/* Miniature Fragrance Grid */}
+      <MiniFragranceGrid
+        items={availablePerfumes}
+        title="Quick Picks"
+        max={8}
+        onItemClick={(perfume, e) => {
+          if (comparisonList.length < 3) {
+            addToComparison(perfume);
+          } else {
+            handlePerfumeClick(perfume, e);
+          }
+        }}
+        ctaHref="/"
+        ctaLabel="Browse All"
+      />
+
       {/* Perfume Detail Modal */}
       <PerfumeDetail
         perfume={selectedPerfume}
