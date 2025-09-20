@@ -1,24 +1,17 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import type React from "react";
 import { useSearchParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Scale, X, Plus, Crown, Search, ArrowLeft } from "lucide-react";
+import { Scale, X, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { perfumes, Perfume } from "../data/perfumes";
 import { CompactPerfumeCard } from "../components/CompactPerfumeCard";
 import { PerfumeDetail } from "../components/PerfumeDetail";
 import { ComparisonCards } from "../components/ComparisonCards";
 import { Header } from "../components/Header";
+import { CompactFilters, FilterState } from "../components/CompactFilters";
+import { SortSelect, SortOption } from "../components/SortSelect";
 
 export default function Compare() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -27,11 +20,10 @@ export default function Compare() {
   const [selectedPerfume, setSelectedPerfume] = useState<Perfume | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailAnchorY, setDetailAnchorY] = useState<number | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [genderFilter, setGenderFilter] = useState("");
-  const [seasonFilter, setSeasonFilter] = useState("");
-  const [accordFilter, setAccordFilter] = useState("");
   const [isInitialized, setIsInitialized] = useState(false);
+  const initialFilters: FilterState = { search: "", gender: "", season: "", bestTime: "", mainAccord: "" };
+  const [filters, setFilters] = useState<FilterState>(initialFilters);
+  const [sortBy, setSortBy] = useState<SortOption>("name");
 
   // Initialize comparison list from URL params on mount
   useEffect(() => {
@@ -88,56 +80,67 @@ export default function Compare() {
     setComparisonList([]);
   };
 
-  // Filter perfumes based on search query and mini filters (excluding already compared ones)
-  const availablePerfumes = perfumes
-    .filter((p) => !comparisonList.find((cp) => cp.id === p.id))
-    .filter((p) => {
-      // Search filter
-      if (searchQuery) {
-        const searchTerm = searchQuery.toLowerCase();
-        const matches =
-          p.name.toLowerCase().includes(searchTerm) ||
-          p.brand.toLowerCase().includes(searchTerm) ||
-          p.originalBrand.toLowerCase().includes(searchTerm) ||
-          p.fragranceProfile.toLowerCase().includes(searchTerm) ||
-          p.mainAccords.some((accord) =>
-            accord.toLowerCase().includes(searchTerm),
-          );
-        if (!matches) return false;
+  // Full list with new filters and sorting (excluding already compared ones)
+  const filteredAndSortedPerfumes = useMemo(() => {
+    const filtered = perfumes
+      .filter((p) => !comparisonList.find((cp) => cp.id === p.id))
+      .filter((perfume) => {
+        if (filters.search) {
+          const normalize = (s: string) => s.toLowerCase().replace(/[^\w\s]/g, " ").replace(/\s+/g, " ").trim();
+          const tokens = normalize(filters.search).split(" ").filter(Boolean);
+          const searchableText = normalize([
+            perfume.id,
+            perfume.name,
+            perfume.brand,
+            perfume.originalBrand,
+            perfume.fragranceProfile,
+            ...perfume.mainAccords,
+            ...perfume.topNotes,
+            ...perfume.middleNotes,
+            ...perfume.baseNotes,
+          ].join(" "));
+          const words = searchableText.split(' ');
+          const allPresent = tokens.every((t) => searchableText.includes(t) || words.some((w) => w.startsWith(t)));
+          if (!allPresent) return false;
+        }
+        if (filters.gender) {
+          if (filters.gender === "Men" && perfume.gender !== "Men" && perfume.gender !== "Unisex") return false;
+          if (filters.gender === "Women" && perfume.gender !== "Women" && perfume.gender !== "Unisex") return false;
+          if (filters.gender === "Unisex" && perfume.gender !== "Unisex") return false;
+        }
+        if (filters.mainAccord) {
+          const has = perfume.mainAccords.some((a) => a.toLowerCase().includes(filters.mainAccord.toLowerCase()) || filters.mainAccord.toLowerCase().includes(a.toLowerCase()));
+          if (!has) return false;
+        }
+        if (filters.season && !perfume.mainSeasons.includes(filters.season)) return false;
+        if (filters.bestTime && perfume.bestTime !== filters.bestTime) return false;
+        return true;
+      });
+
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "brand":
+          return a.brand.localeCompare(b.brand);
+        case "gender":
+          const genderOrder = { Women: 1, Men: 2, Unisex: 3 } as const;
+          return (genderOrder[a.gender as keyof typeof genderOrder] || 0) - (genderOrder[b.gender as keyof typeof genderOrder] || 0);
+        case "popularity":
+          const aPop = a.mainAccords.length + a.topNotes.length + a.middleNotes.length + a.baseNotes.length;
+          const bPop = b.mainAccords.length + b.topNotes.length + b.middleNotes.length + b.baseNotes.length;
+          return bPop - aPop;
+        case "sillage":
+          const sOrder = { Light: 1, "Light to Moderate": 2, Moderate: 3, "Moderate to Strong": 4, Strong: 5, "Very Strong": 6 } as const;
+          return (sOrder[b.sillage as keyof typeof sOrder] || 0) - (sOrder[a.sillage as keyof typeof sOrder] || 0);
+        default:
+          return 0;
       }
-
-      // Gender filter - include unisex in both men and women searches
-      if (genderFilter) {
-        if (
-          genderFilter === "Men" &&
-          p.gender !== "Men" &&
-          p.gender !== "Unisex"
-        )
-          return false;
-        if (
-          genderFilter === "Women" &&
-          p.gender !== "Women" &&
-          p.gender !== "Unisex"
-        )
-          return false;
-        if (genderFilter === "Unisex" && p.gender !== "Unisex") return false;
-      }
-
-      // Season filter
-      if (seasonFilter && !p.mainSeasons.includes(seasonFilter)) return false;
-
-      // Accord filter
-      if (accordFilter) {
-        const hasMatchingAccord = p.mainAccords.some(
-          (accord) =>
-            accord.toLowerCase().includes(accordFilter.toLowerCase()) ||
-            accordFilter.toLowerCase().includes(accord.toLowerCase()),
-        );
-        if (!hasMatchingAccord) return false;
-      }
-
-      return true;
     });
+    return sorted;
+  }, [comparisonList, filters, sortBy]);
+
+  const resetFilters = () => setFilters(initialFilters);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black-950 via-black-900 to-black-800">
@@ -216,7 +219,6 @@ export default function Compare() {
             >
               <CardHeader className="relative z-10 p-2 sm:p-3">
                 <CardTitle className="text-sm font-bold text-gold-300 flex items-center gap-2">
-                  <Plus className="w-4 h-4 text-gold-700" />
                   Add Fragrances
                   {comparisonList.length === 3 && (
                     <span className="text-xs text-gold-600 font-medium">
@@ -224,106 +226,9 @@ export default function Compare() {
                     </span>
                   )}
                 </CardTitle>
-
-                {/* Search */}
-                <div className="relative mb-2">
-                  <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-gray-400" />
-                  <Input
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-7 border-gold-300 focus:border-gold-500 bg-black-800 text-xs h-7"
-                  />
-                </div>
-
-                {/* Mini Filters */}
-                <div className="space-y-2">
-                  <div className="grid grid-cols-3 lg:grid-cols-1 gap-1">
-                    {/* Gender Filter */}
-                    <Select
-                      value={genderFilter || "all"}
-                      onValueChange={(value) =>
-                        setGenderFilter(value === "all" ? "" : value)
-                      }
-                    >
-                      <SelectTrigger className="border-gold-300 focus:border-gold-500 bg-black-800 text-xs h-7">
-                        <SelectValue placeholder="Gender" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All genders</SelectItem>
-                        <SelectItem value="Women">Women</SelectItem>
-                        <SelectItem value="Men">Men</SelectItem>
-                        <SelectItem value="Unisex">Unisex</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    {/* Season Filter */}
-                    <Select
-                      value={seasonFilter || "all"}
-                      onValueChange={(value) =>
-                        setSeasonFilter(value === "all" ? "" : value)
-                      }
-                    >
-                      <SelectTrigger className="border-gold-300 focus:border-gold-500 bg-black-800 text-xs h-7">
-                        <SelectValue placeholder="Season" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All seasons</SelectItem>
-                        <SelectItem value="Spring">Spring</SelectItem>
-                        <SelectItem value="Summer">Summer</SelectItem>
-                        <SelectItem value="Fall">Fall</SelectItem>
-                        <SelectItem value="Winter">Winter</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    {/* Accord Filter */}
-                    <Select
-                      value={accordFilter || "all"}
-                      onValueChange={(value) =>
-                        setAccordFilter(value === "all" ? "" : value)
-                      }
-                    >
-                      <SelectTrigger className="border-gold-300 focus:border-gold-500 bg-black-800 text-xs h-7">
-                        <SelectValue placeholder="Scent Type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All scents</SelectItem>
-                        <SelectItem value="Fresh">Fresh</SelectItem>
-                        <SelectItem value="Floral">Floral</SelectItem>
-                        <SelectItem value="Fruity">Fruity</SelectItem>
-                        <SelectItem value="Sweet">Sweet</SelectItem>
-                        <SelectItem value="Woody">Woody</SelectItem>
-                        <SelectItem value="Spicy">Spicy</SelectItem>
-                        <SelectItem value="Oriental">Oriental</SelectItem>
-                        <SelectItem value="Citrus">Citrus</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Clear Filters Button */}
-                  {(genderFilter ||
-                    seasonFilter ||
-                    accordFilter ||
-                    searchQuery) && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSearchQuery("");
-                        setGenderFilter("");
-                        setSeasonFilter("");
-                        setAccordFilter("");
-                      }}
-                      className="w-full border-gold-400 text-gold-300 hover:bg-black-800 hover:text-white text-xs h-6"
-                    >
-                      <X className="w-3 h-3 mr-1" />
-                      Clear
-                    </Button>
-                  )}
-                </div>
               </CardHeader>
 
-              <CardContent className="relative z-10 p-2">
+              <CardContent className="relative z-10 p-2 space-y-3">
                 {comparisonList.length === 3 ? (
                   <div className="text-center py-6">
                     <div className="mb-4">
@@ -351,30 +256,41 @@ export default function Compare() {
                     </Button>
                   </div>
                 ) : (
-                  <div className="space-y-1">
-                    {availablePerfumes.length === 0 ? (
-                      <div className="text-center py-4">
-                        <p className="text-xs text-gold-300">
-                          {searchQuery ? "No matches" : "All selected"}
-                        </p>
-                      </div>
-                    ) : (
-                      availablePerfumes.map((perfume) => (
-                        <div key={perfume.id} className="relative">
-                          <CompactPerfumeCard
-                            perfume={perfume}
-                            onClick={(e) => {
-                              if (comparisonList.length < 3) {
-                                addToComparison(perfume);
-                              } else {
-                                handlePerfumeClick(perfume, e);
-                              }
-                            }}
-                          />
+                  <>
+                    <CompactFilters
+                      filters={filters}
+                      onFiltersChange={setFilters}
+                      onReset={resetFilters}
+                      resultCount={filteredAndSortedPerfumes.length}
+                    />
+
+                    <div className="flex items-center justify-end">
+                      <SortSelect value={sortBy} onChange={setSortBy} />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {filteredAndSortedPerfumes.length === 0 ? (
+                        <div className="col-span-full text-center py-4">
+                          <p className="text-xs text-gold-300">No matches</p>
                         </div>
-                      ))
-                    )}
-                  </div>
+                      ) : (
+                        filteredAndSortedPerfumes.map((perfume) => (
+                          <div key={perfume.id} className="relative">
+                            <CompactPerfumeCard
+                              perfume={perfume}
+                              onClick={(e) => {
+                                if (comparisonList.length < 3) {
+                                  addToComparison(perfume);
+                                } else {
+                                  handlePerfumeClick(perfume, e);
+                                }
+                              }}
+                            />
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </>
                 )}
               </CardContent>
             </Card>
