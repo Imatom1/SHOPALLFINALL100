@@ -972,7 +972,7 @@ export default function Quiz() {
         </div>
 
         {/* Perfume Grid */}
-        <div className="max-h-[600px] overflow-y-auto">
+        <div>
           {filteredAndSortedPerfumes.length === 0 ? (
             <div className="text-center py-12">
               <Sparkles className="w-12 h-12 text-gold-500 mx-auto mb-4" />

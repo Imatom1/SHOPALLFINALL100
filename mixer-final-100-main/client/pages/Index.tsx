@@ -162,22 +162,16 @@ export default function Index() {
     return sorted;
   }, [filters, sortBy]);
 
-  // 4-page pagination derived from current results
+  // Show full list without pagination
   const total = filteredAndSortedPerfumes.length;
-  const perPage = Math.max(1, Math.ceil(total / 4));
-  const totalPages = Math.max(1, Math.min(4, Math.ceil(total / perPage)));
-  const safePage = Math.min(Math.max(1, currentPage), totalPages);
-  const startIndex = (safePage - 1) * perPage;
-  const endIndex = startIndex + perPage;
-  const pageItems = filteredAndSortedPerfumes.slice(startIndex, endIndex);
+  const perPage = total;
+  const totalPages = 1;
+  const safePage = 1;
+  const startIndex = 0;
+  const endIndex = total;
+  const pageItems = filteredAndSortedPerfumes;
 
-  useEffect(() => {
-    if (currentPage !== safePage) {
-      const next = new URLSearchParams(searchParams);
-      next.set("page", String(safePage));
-      setSearchParams(next, { replace: true });
-    }
-  }, [currentPage, safePage, searchParams, setSearchParams]);
+  // Pagination disabled: do not update URL params
 
   const handlePerfumeClick = (perfume: Perfume, e?: React.MouseEvent<HTMLElement>) => {
     console.log("Perfume clicked:", perfume.name);
@@ -266,7 +260,7 @@ export default function Index() {
                 </div>
 
               {/* Pagination */}
-              <div className="mt-6">
+              <div className="mt-6 hidden">
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
