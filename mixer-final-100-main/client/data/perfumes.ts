@@ -15,6 +15,7 @@ export interface Perfume {
   bestTime: string;
   mainSeasons: string[];
   sillage: string;
+  longevity?: string;
   topNotes: string[];
   middleNotes: string[];
   baseNotes: string[];
