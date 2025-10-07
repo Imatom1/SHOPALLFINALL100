@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import type React from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,9 +43,6 @@ import {
 } from "lucide-react";
 import { Header } from "../components/Header";
 import { PerfumeDetail } from "../components/PerfumeDetail";
-import { CompactPerfumeCard } from "../components/CompactPerfumeCard";
-import { SortSelect, SortOption } from "../components/SortSelect";
-import { CompactFilters, FilterState } from "../components/CompactFilters";
 import { perfumes, Perfume } from "../data/perfumes";
 
 interface QuizQuestion {
@@ -329,143 +326,7 @@ export default function Quiz() {
   // Check if user came from intro page or has started the quiz
   const hasStartedQuiz = !showIntro && (answers.length > 0 || showResults);
 
-  // Full fragrance section state
-  const initialFilters: FilterState = {
-    search: "",
-    gender: "",
-    season: "",
-    bestTime: "",
-    mainAccord: "",
-  };
-
-  const [filters, setFilters] = useState<FilterState>(initialFilters);
-  const [sortBy, setSortBy] = useState<SortOption>("popularity");
-
-  // Filter and sort perfumes
-  const filteredAndSortedPerfumes = useMemo(() => {
-    const filtered = perfumes.filter((perfume) => {
-      // Search filter (normalized, tokenized)
-      if (filters.search) {
-        const normalize = (s: string) =>
-          s
-            .toLowerCase()
-            .replace(/[^\w\s]/g, " ")
-            .replace(/\s+/g, " ")
-            .trim();
-
-        const tokens = normalize(filters.search).split(" ").filter(Boolean);
-        const searchableText = normalize(
-          [
-            perfume.id,
-            perfume.name,
-            perfume.brand,
-            perfume.originalBrand,
-            perfume.fragranceProfile,
-            ...perfume.mainAccords,
-            ...perfume.topNotes,
-            ...perfume.middleNotes,
-            ...perfume.baseNotes,
-          ].join(" "),
-        );
-
-        // Match if every token exists in searchableText OR matches a word prefix
-        const words = searchableText.split(' ');
-        const allPresent = tokens.every((t) =>
-          searchableText.includes(t) || words.some((w) => w.startsWith(t)),
-        );
-        if (!allPresent) return false;
-      }
-
-      // Gender filter - include unisex in both men and women searches
-      if (filters.gender) {
-        if (
-          filters.gender === "Men" &&
-          perfume.gender !== "Men" &&
-          perfume.gender !== "Unisex"
-        )
-          return false;
-        if (
-          filters.gender === "Women" &&
-          perfume.gender !== "Women" &&
-          perfume.gender !== "Unisex"
-        )
-          return false;
-        if (filters.gender === "Unisex" && perfume.gender !== "Unisex")
-          return false;
-      }
-
-      // Main accord filter
-      if (filters.mainAccord) {
-        const hasMatchingAccord = perfume.mainAccords.some(
-          (accord) =>
-            accord.toLowerCase().includes(filters.mainAccord.toLowerCase()) ||
-            filters.mainAccord.toLowerCase().includes(accord.toLowerCase()),
-        );
-        if (!hasMatchingAccord) return false;
-      }
-
-      // Season filter
-      if (filters.season && !perfume.mainSeasons.includes(filters.season))
-        return false;
-
-      // Best time filter
-      if (filters.bestTime && perfume.bestTime !== filters.bestTime)
-        return false;
-
-      return true;
-    });
-
-    // Sort the filtered results
-    const sorted = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case "name":
-          return a.name.localeCompare(b.name);
-        case "brand":
-          return a.brand.localeCompare(b.brand);
-        case "gender":
-          const genderOrder = { Women: 1, Men: 2, Unisex: 3 };
-          return (
-            (genderOrder[a.gender as keyof typeof genderOrder] || 0) -
-            (genderOrder[b.gender as keyof typeof genderOrder] || 0)
-          );
-        case "popularity":
-          // Sort by popularity (based on number of main accords + complexity)
-          const aPopularity =
-            a.mainAccords.length +
-            a.topNotes.length +
-            a.middleNotes.length +
-            a.baseNotes.length;
-          const bPopularity =
-            b.mainAccords.length +
-            b.topNotes.length +
-            b.middleNotes.length +
-            b.baseNotes.length;
-          return bPopularity - aPopularity; // Higher complexity = more popular
-        case "sillage":
-          const sillageOrder = {
-            Light: 1,
-            "Light to Moderate": 2,
-            Moderate: 3,
-            "Moderate to Strong": 4,
-            Strong: 5,
-            "Very Strong": 6,
-          };
-          return (
-            (sillageOrder[b.sillage as keyof typeof sillageOrder] || 0) -
-            (sillageOrder[a.sillage as keyof typeof sillageOrder] || 0)
-          );
-        default:
-          return 0;
-      }
-    });
-
-    return sorted;
-  }, [filters, sortBy]);
-
-  const resetFilters = () => {
-    setFilters(initialFilters);
-  };
-
+  
   const startQuiz = () => {
     setShowIntro(false);
   };
@@ -936,74 +797,6 @@ export default function Quiz() {
     );
   };
 
-  // Fragrance section component
-  const FragranceSection = () => (
-    <div className="bg-gradient-to-b from-black-900 to-black-800 border-t border-gold-500/20">
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <Sparkles className="w-5 h-5 text-gold-600" />
-            <h3 className="text-xl font-semibold text-gold-300">All Fragrances</h3>
-            <Sparkles className="w-5 h-5 text-gold-600" />
-          </div>
-          <p className="text-sm text-gold-400">
-            Browse our complete collection of {perfumes.length} premium fragrances
-          </p>
-        </div>
-
-        {/* Filters */}
-        <div className="mb-6">
-          <CompactFilters
-            filters={filters}
-            onFiltersChange={setFilters}
-            onReset={resetFilters}
-            resultCount={filteredAndSortedPerfumes.length}
-          />
-        </div>
-
-        {/* Results Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h4 className="text-lg font-semibold text-gold-400">
-            Fragrances ({filteredAndSortedPerfumes.length})
-          </h4>
-          <div className="hidden sm:block">
-            <SortSelect value={sortBy} onChange={setSortBy} />
-          </div>
-        </div>
-
-        {/* Perfume Grid */}
-        <div>
-          {filteredAndSortedPerfumes.length === 0 ? (
-            <div className="text-center py-12">
-              <Sparkles className="w-12 h-12 text-gold-500 mx-auto mb-4" />
-              <h5 className="text-lg font-semibold text-gold-400 mb-2">
-                No fragrances found
-              </h5>
-              <p className="text-sm text-gold-300 mb-4">
-                Try adjusting your filters to discover more beautiful scents
-              </p>
-              <button
-                onClick={resetFilters}
-                className="text-gold-500 hover:text-gold-400 font-medium text-sm"
-              >
-                Clear all filters
-              </button>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3 sm:gap-4">
-              {filteredAndSortedPerfumes.map((perfume) => (
-                <CompactPerfumeCard
-                  key={perfume.id}
-                  perfume={perfume}
-                  onClick={(e) => handlePerfumeClick(perfume, e)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-black-900 via-black-900 to-black-800 overflow-hidden">
@@ -1019,11 +812,6 @@ export default function Quiz() {
               <QuizContent />
             </CardContent>
           </Card>
-        </div>
-
-        {/* Full Width Fragrance Section */}
-        <div className="w-full">
-          <FragranceSection />
         </div>
       </div>
 
