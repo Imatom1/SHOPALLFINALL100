@@ -15,6 +15,7 @@ export interface Perfume {
   bestTime: string;
   mainSeasons: string[];
   sillage: string;
+  longevity?: string;
   topNotes: string[];
   middleNotes: string[];
   baseNotes: string[];
@@ -198,6 +199,33 @@ export const perfumes: Perfume[] = [
     baseNotes: ["Vanilla", "White Musk", "Cedar"],
     description:
       "A gourmand rose fragrance that perfectly balances sweetness and elegance, inspired by Mancera Rose Vanille.",
+    sizes: standardSizes,
+  },
+  {
+    id: "vanilla-sugar",
+    name: "Vanilla Rock Sugar",
+    brand: "Vanilla Sugar",
+    originalBrand: "KAYALI",
+    gender: "Women",
+    mainAccords: [
+      "Sweet",
+      "Gourmand",
+      "Warm Spicy",
+      "Amber",
+      "Creamy",
+      "Woody",
+    ],
+    fragranceProfile: "Oriental Gourmand",
+    bestTime: "Evening/Night",
+    mainSeasons: ["Fall", "Winter", "Early Spring"],
+
+    sillage: "Very Strong",
+    longevity: "8-10 hours",
+    topNotes: ["Vanilla Bean", "Caramelized Sugar", "Bergamot"],
+    middleNotes: ["Tonka Bean", "Amberwood", "Jasmine"],
+    baseNotes: ["Sandalwood", "Benzoin", "Musk", "Patchouli"],
+    description:
+      "An indulgent vanilla-forward gourmand blending caramelized sugar with creamy woods for a captivating evening aura inspired by KAYALI Vanilla Rock Sugar.",
     sizes: standardSizes,
   },
   {

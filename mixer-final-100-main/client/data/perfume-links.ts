@@ -31,6 +31,11 @@ export const perfumeLinks: PerfumeLink[] = [
     perfumeId: "rose-vanille",
     buyUrl: "https://golden-aroma.square.site/product/inspired-by-rose-vanille-rose-vanilla/T6JVCELFAGDSDFHIQRGPCAJU?cp=true&sa=false&sbp=false&q=false&category_id=2GCWNDMHNSKSAA2K76ASX36N",
   },
+  {
+    perfumeId: "vanilla-sugar",
+    buyUrl:
+      "https://golden-aroma.square.site/product/inspired-by-vanilla-rock-sugar-vanilla-sugar/HFB7M2LQJFOEMB4TEEAJCBMD?cp=true&sa=false&sbp=false&q=true",
+  },
   { perfumeId: "red-tobacco", buyUrl: "https://golden-aroma.square.site/product/inspired-by-red-tobacco-red-tobacco-flame/W6RHZX74QVQTWZQI4ELTNJ5Y?cp=true&sa=false&sbp=false&q=false&category_id=2GCWNDMHNSKSAA2K76ASX36N" },
   {
     perfumeId: "imagination-lv",
